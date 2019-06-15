@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Builds a Lambda function
+Parameters:
+  Bucket:
+    Description: S3 bucket containing Lambda packages
+    Type: String
+  KeyPrefix:
+    Description: S3 key prefix for Lambda files
+    Type: String
+  KeySource:
+    Description: S3 key for this Lambda function's source zip
+    Type: String
+  KeyTarget:
+    Description: S3 key for the built package zip
+    Type: String
+  Runtime:
+    Description: Runtime for this Lambda function
+    Type: String
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: CFN
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:DescribeStacks
+                Resource: !Sub "arn:aws:cloudformation:$${AWS::Region}:$${AWS::AccountId}:*"
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub "arn:aws:logs:$${AWS::Region}:$${AWS::AccountId}:log-group:/aws/lambda/*:*"
+              - Sid: AllowLambdaToCreateLogGroups
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                Resource: !Sub "arn:aws:logs:$${AWS::Region}:$${AWS::AccountId}:*"
+        - PolicyName: S3
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub "arn:aws:s3:::$${Bucket}/$${KeyPrefix}/*"
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: !Sub "Builds s3://$${Bucket}/$${KeyTarget}"
+      Handler: ${jsonencode(lambda_handler)}
+      MemorySize: ${jsonencode(lambda_memory_size)}
+      Runtime: ${jsonencode(lambda_runtime)}
+      Timeout: ${jsonencode(lambda_timeout)}
+      Code:
+        ZipFile: ${jsonencode(lambda_code)}
+      Role:
+        Fn::GetAtt: LambdaRole.Arn
+  LambdaPackage:
+    Type: Custom::LambdaPackage
+    Properties:
+      ServiceToken: !GetAtt LambdaFunction.Arn
+      Bucket: !Ref Bucket
+      KeySource: !Ref KeySource
+      KeyTarget: !Ref KeyTarget
+Outputs:
+  Bucket:
+    Description: S3 bucket containing the built Lambda package
+    Value: !Ref Bucket
+  Key:
+    Description: S3 key for the built Lambda package
+    Value: !Ref KeyTarget
+  Runtime:
+    Description: Runtime for this Lambda function
+    Value: !Ref Runtime
