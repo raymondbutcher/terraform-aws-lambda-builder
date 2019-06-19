@@ -1,10 +1,10 @@
 module "source_zip_file" {
   source = "github.com/raymondbutcher/terraform-archive-stable?ref=v0.0.3"
 
-  enabled = var.enabled && var.build_mode != null
+  enabled = var.enabled && var.build_mode != "DISABLED"
 
   empty_dirs  = var.empty_dirs
-  output_path = "${path.module}/zip_files/${data.aws_partition.current[0].partition}-${data.aws_region.current[0].name}-${data.aws_caller_identity.current[0].account_id}-${var.function_name}.zip"
+  output_path = var.build_mode == "FILENAME" ? var.filename : "${path.module}/zip_files/${data.aws_partition.current[0].partition}-${data.aws_region.current[0].name}-${data.aws_caller_identity.current[0].account_id}-${var.function_name}.zip"
   source_dir  = var.source_dir
 }
 

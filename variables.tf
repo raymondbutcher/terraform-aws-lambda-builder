@@ -1,9 +1,9 @@
 # Builder arguments.
 
 variable "build_mode" {
-  description = "The build mode to use, one of `LAMBDA`, `S3`, `ZIPFILE`, `null`."
+  description = "The build mode to use, one of `DISABLED`, `FILENAME`, `LAMBDA`, `S3`."
   type        = string
-  default     = null
+  default     = "DISABLED"
 }
 
 variable "builder_memory_size" {
@@ -63,7 +63,7 @@ variable "role_policy_arns_count" {
 variable "source_dir" {
   description = "Local source directory for the Lambda package. This will be zipped and uploaded to the S3 bucket. Requires `s3_bucket`. Conflicts with `s3_key`, `s3_object_version` and `filename`."
   type        = string
-  default     = null
+  default     = ""
 }
 
 # Standard Lambda resource arguments.

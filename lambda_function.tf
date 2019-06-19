@@ -2,7 +2,7 @@ resource "aws_lambda_function" "built" {
   count = var.enabled ? 1 : 0
 
   description                    = var.description
-  filename                       = var.build_mode == "ZIPFILE" ? module.source_zip_file.output_path : var.filename
+  filename                       = var.filename
   function_name                  = var.function_name
   handler                        = var.handler
   kms_key_arn                    = var.kms_key_arn
@@ -15,7 +15,7 @@ resource "aws_lambda_function" "built" {
   s3_bucket                      = var.s3_bucket
   s3_key                         = var.build_mode == "LAMBDA" ? local.built_s3_key : var.s3_key
   s3_object_version              = var.s3_object_version
-  source_code_hash               = var.build_mode == "S3" || var.build_mode == "ZIPFILE" ? module.source_zip_file.output_base64sha256 : var.source_code_hash
+  source_code_hash               = var.build_mode == "FILENAME" || var.build_mode == "S3" ? module.source_zip_file.output_base64sha256 : var.source_code_hash
   tags                           = var.tags
   timeout                        = var.timeout
 

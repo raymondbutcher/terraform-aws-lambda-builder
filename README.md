@@ -4,13 +4,19 @@ This Terraform module packages and deploys an AWS Lambda function. It optionally
 
 ## Features
 
-* Packages are built inside the same Lambda runtime environment as your Lambda function.
-* Define your own build script with shell commands like `pip install`, `npm install`, etc.
-* No reliance on `pip`, `virtualenv`, `npm`, etc on the machine running Terraform.
-* Smaller zip files to upload because `pip install`, etc. doesn't run locally.
-* No separate build steps required before running Terraform.
-* No zip files committed to version control.
-* Deploy once and never see it again in Terraform plans unless the source files change.
+* Supports `source_dir` to automatically create Lambda packages.
+    * Handles source code changes automatically and correctly.
+    * No unexpected changes in Terraform plans.
+* Supports `LAMBDA build_mode` to run a build scripts inside Lambda.
+    * Define your own build script with shell commands like `pip install`, `npm install`, etc.
+    * Runs inside Lambda using the same runtime environment as the target Lambda function.
+    * No reliance on `pip`, `virtualenv`, `npm`, etc on the machine running Terraform.
+    * Smaller zip files to upload because `pip install`, etc. doesn't run locally.
+* Supports `S3/FILENAME build_mode` to just get the zip functionality.
+    * For when there are no build steps but you still want the `source_dir` functionality.
+* Helps you to avoid:
+    * Separate build steps to create packages before running Terraform.
+    * Committing built package zip files to version control.
 
 ## Requirements
 
@@ -48,10 +54,10 @@ The `build_mode` input variable can be set to one of:
     * Zips `source_dir`, uploads it to `s3_bucket` and runs `build.sh` inside Lambda to build the final package.
 * `S3`
     * Zips `source_dir` and uploads to `s3_bucket` at `s3_key`.
-* `ZIPFILE`
+* `FILENAME`
     * Zips `source_dir` and uploads it directly to the Lambda service.
-* `null`
-    * Bypasses all build functionality.
+* `DISABLED` (default)
+    * Disables build functionality.
 
 ### Lambda build mode
 
@@ -85,11 +91,15 @@ Runtimes not listed above have not been tested.
 
 ### S3 build mode
 
-The `S3` build mode zips `source_dir` and uploads it to S3. It automatically sets `source_code_hash` to ensure changes to the source code get deployed.
+The `S3` build mode zips `source_dir` and uploads it to S3 using `s3_bucket` and `s3_key`. It automatically sets `source_code_hash` to ensure changes to the source code get deployed.
 
-### ZipFile build mode
+### Filename build mode
 
-The `ZIPFILE` build mode zips `source_dir` and uploads it directly to the Lambda service. It automatically sets `source_code_hash` to ensure changes to the source code get deployed.
+The `FILENAME` build mode zips `source_dir` and writes it to `filename`. The package is uploaded directly to the Lambda service. It automatically sets `source_code_hash` to ensure changes to the source code get deployed.
+
+### Disabled build mode
+
+The `DISABLED` build mode disables build functionality, making this module do nothing except create a Lambda function resource and optionally its IAM role.
 
 ## Automatic role creation
 

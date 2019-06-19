@@ -6,7 +6,8 @@ provider "aws" {
 module "build_and_upload_directly" {
   source = "../../"
 
-  build_mode    = "ZIPFILE"
+  build_mode    = "FILENAME"
+  filename      = "${path.module}/package.zip"
   function_name = "terraform-aws-lambda-builder-filename1"
   handler       = "lambda.handler"
   runtime       = "python3.6"
