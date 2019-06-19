@@ -1,5 +1,5 @@
 module "source_zip_file" {
-  source = "github.com/raymondbutcher/terraform-archive-stable?ref=v0.0.3"
+  source = "github.com/raymondbutcher/terraform-archive-stable?ref=v0.0.4"
 
   enabled = var.enabled && var.build_mode != "DISABLED"
 
