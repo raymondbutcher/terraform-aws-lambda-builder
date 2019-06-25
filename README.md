@@ -83,9 +83,10 @@ The `LAMBDA` build mode works as follows.
 
 | Runtime    | Notes                |
 |------------|----------------------|
-| Python 2.7 | `pip` not included   |
-| Python 3.6 | `pip install` works  |
-| Python 3.7 | `pip install` works  |
+| nodejs8.10 | `npm install` works  |
+| python2.7  | `pip` not included   |
+| python3.6  | `pip install` works  |
+| python3.7  | `pip install` works  |
 
 Runtimes not listed above have not been tested.
 
