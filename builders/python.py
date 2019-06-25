@@ -66,9 +66,9 @@ def build(event):
     print("Downloading s3://{}/{} to {}".format(bucket, key_source, download_path))
     s3_client.download_file(bucket, key_source, download_path)
 
-    # Extract the source zip.
+    # Prepare the build directory.
     build_path = "/tmp/build"
-    print("Prepating build path {}".format(build_path))
+    print("Preparing build path {}".format(build_path))
     if os.path.exists(build_path):
         shutil.rmtree(build_path)
     os.mkdir(build_path)

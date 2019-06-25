@@ -1,8 +1,9 @@
 locals {
   builder_filenames = {
-    "python2.7" = "python.py"
-    "python3.6" = "python.py"
-    "python3.7" = "python.py"
+    "nodejs8.10" = "nodejs.js"
+    "python2.7"  = "python.py"
+    "python3.6"  = "python.py"
+    "python3.7"  = "python.py"
   }
   cloudformation_parameters = {
     Bucket    = var.s3_bucket

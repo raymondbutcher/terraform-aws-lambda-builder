@@ -9,7 +9,7 @@ variable "build_mode" {
 variable "builder_memory_size" {
   description = "Memory size for the builder Lambda function."
   type        = number
-  default     = 128
+  default     = 512
 }
 
 variable "builder_timeout" {
