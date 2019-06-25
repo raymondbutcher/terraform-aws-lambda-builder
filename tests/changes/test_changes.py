@@ -1,8 +1,7 @@
 import json
 
-from pretf import workflow
+from pretf import test
 from pretf.aws import get_session
-from pretf.test import SimpleTest
 
 session = get_session(profile_name="rbutcher", region_name="eu-west-1")
 lambda_client = session.client("lambda")
@@ -12,17 +11,14 @@ s3_client = session.client("s3")
 # TODO: check s3 bucket to ensure change of files and cleanup of old ones, and empty after destroy
 
 
-class TestChanges(SimpleTest):
+class TestChanges(test.SimpleTest):
     def test_init_terraform(self):
         """
         Configure and initialize the backend.
 
         """
 
-        workflow.delete_files()
-        workflow.create_files()
-
-        self.init()
+        self.pretf.init()
 
     def test_deploy_lambda_function(self):
         """
@@ -48,7 +44,7 @@ class TestChanges(SimpleTest):
 
     def apply_terraform_and_check_version(self, version):
         # Run terraform apply and get the functions from the outputs.
-        outputs = self.apply()
+        outputs = self.pretf.apply()
         function_names = outputs["function_names"]
         assert len(function_names) == 2
 
@@ -69,3 +65,12 @@ class TestChanges(SimpleTest):
     def set_source_version(self, version):
         with open("src/version.json", "w") as open_file:
             json.dump({"version": version}, open_file)
+
+    @test.always
+    def test_destroy(self):
+        """
+        Clean up after the test.
+
+        """
+
+        self.pretf.destroy()

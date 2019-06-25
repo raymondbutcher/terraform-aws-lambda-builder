@@ -1,5 +1,7 @@
 __pycache__
 .direnv
 .terraform
-*.json
+*.tf.json
 *.zip
+tests/changes/src/*.json
+tests/filename/src/*.json
