@@ -43,8 +43,8 @@ elif query["build_mode"] == LAMBDA:
 
 elif query["build_mode"] == S3:
 
-    require("s3_bucket", "source_dir")
-    conflict("filename", "s3_key", "s3_object_version", "source_code_hash")
+    require("s3_bucket", "s3_key", "source_dir")
+    conflict("filename", "s3_object_version", "source_code_hash")
 
 else:
 
