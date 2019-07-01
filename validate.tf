@@ -10,5 +10,6 @@ data "external" "validate" {
     s3_object_version = var.s3_object_version != null ? var.s3_object_version : ""
     source_code_hash  = var.source_code_hash != null ? var.source_code_hash : ""
     source_dir        = var.source_dir
+    zip_files_dir     = "${path.module}/zip_files"
   }
 }

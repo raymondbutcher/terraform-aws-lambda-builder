@@ -1,5 +1,9 @@
+import errno
+import glob
 import json
+import os
 import sys
+import time
 
 DISABLED = "DISABLED"
 FILENAME = "FILENAME"
@@ -38,7 +42,7 @@ elif query["build_mode"] == FILENAME:
 
 elif query["build_mode"] == LAMBDA:
 
-    require("source_dir", "s3_bucket")
+    require("s3_bucket", "source_dir")
     conflict("filename", "s3_key", "s3_object_version", "source_code_hash")
 
 elif query["build_mode"] == S3:
@@ -50,5 +54,17 @@ else:
 
     sys.stderr.write("invalid build mode {}".format(query["build_mode"]))
     sys.exit(1)
+
+# Delete zips more than a day old.
+zip_files = glob.glob(os.path.join(query["zip_files_dir"], "*.zip"))
+for path in zip_files:
+    try:
+        file_time = os.path.getmtime(path)
+        file_age = time.time() - file_time
+        if file_age > 60 * 60 * 24:
+            os.remove(path)
+    except OSError as error:
+        if error.errno != errno.ENOENT:
+            raise
 
 json.dump({}, sys.stdout)
