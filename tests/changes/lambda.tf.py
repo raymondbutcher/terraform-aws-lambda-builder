@@ -41,6 +41,7 @@ def python_lambda_resources(var):
         {
             "source": "../../",
             "build_mode": "LAMBDA",
+            "create_role": False,
             "function_name": random.hex,
             "handler": "lambda.handler",
             "role": role.arn,

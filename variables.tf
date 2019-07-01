@@ -18,6 +18,12 @@ variable "builder_timeout" {
   default     = 900
 }
 
+variable "create_role" {
+  description = "Create an IAM role for the function. Only required when `role` is a computed/unknown value."
+  type = bool
+  default = null
+}
+
 variable "empty_dirs" {
   description = "Include empty directories in the Lambda package."
   type        = bool

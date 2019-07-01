@@ -145,7 +145,7 @@ locals {
 module "role" {
   source = "git::https://gitlab.com/claranet-pcp/terraform/aws/terraform-aws-lambda-role.git?ref=v0.0.4"
 
-  enabled = var.enabled && var.role == null
+  enabled = var.enabled && coalesce(var.create_role, var.role == null)
 
   function_name         = var.function_name
   cloudwatch_logs       = var.role_cloudwatch_logs
