@@ -143,7 +143,7 @@ locals {
 #######################################
 
 module "role" {
-  source = "git::https://gitlab.com/claranet-pcp/terraform/aws/terraform-aws-lambda-role.git?ref=v0.0.4"
+  source = "git::https://gitlab.com/claranet-pcp/terraform/aws/terraform-aws-lambda-role.git?ref=v0.0.5"
 
   enabled = var.enabled && coalesce(var.create_role, var.role == null)
 
