@@ -20,8 +20,8 @@ variable "builder_timeout" {
 
 variable "create_role" {
   description = "Create an IAM role for the function. Only required when `role` is a computed/unknown value."
-  type = bool
-  default = null
+  type        = bool
+  default     = null
 }
 
 variable "empty_dirs" {
@@ -75,6 +75,7 @@ variable "source_dir" {
 # Standard Lambda resource arguments.
 
 variable "dead_letter_config" {
+  description = "Nested block to configure the function's dead letter queue. See details below."
   type = object({
     target_arn = string
   })
@@ -82,11 +83,13 @@ variable "dead_letter_config" {
 }
 
 variable "description" {
-  type    = string
-  default = null
+  description = "Description of what your Lambda Function does."
+  type        = string
+  default     = null
 }
 
 variable "environment" {
+  description = "The Lambda environment's configuration settings."
   type = object({
     variables = map(string)
   })
@@ -94,83 +97,100 @@ variable "environment" {
 }
 
 variable "filename" {
-  type    = string
-  default = null
+  description = "The path to the function's deployment package within the local filesystem. If defined, The s3_-prefixed options cannot be used."
+  type        = string
+  default     = null
 }
 
 variable "function_name" {
-  type = string
+  description = "A unique name for your Lambda Function."
+  type        = string
 }
 
 variable "handler" {
-  type = string
+  description = "The function entrypoint in your code."
+  type        = string
 }
 
 variable "kms_key_arn" {
-  type    = string
-  default = null
+  description = "Amazon Resource Name (ARN) of the AWS Key Management Service (KMS) key that is used to encrypt environment variables."
+  type        = string
+  default     = null
 }
 
 variable "layers" {
-  type    = list(string)
-  default = null
+  description = "List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function."
+  type        = list(string)
+  default     = null
 }
 
 variable "memory_size" {
-  type    = number
-  default = null
+  description = "Amount of memory in MB your Lambda Function can use at runtime."
+  type        = number
+  default     = null
 }
 
 variable "publish" {
-  type    = bool
-  default = null
+  description = "Whether to publish creation/change as new Lambda Function Version."
+  type        = bool
+  default     = null
 }
 
 variable "reserved_concurrent_executions" {
-  type    = number
-  default = null
+  description = "The amount of reserved concurrent executions for this lambda function. A value of 0 disables lambda from being triggered and -1 removes any concurrency limitations."
+  type        = number
+  default     = null
 }
 
 variable "role" {
-  type    = string
-  default = null
+  description = "IAM role attached to the Lambda Function. This governs both who / what can invoke your Lambda Function, as well as what resources our Lambda Function has access to."
+  type        = string
+  default     = null
 }
 
 variable "runtime" {
-  type = string
+  description = "The identifier of the function's runtime."
+  type        = string
 }
 
 variable "s3_bucket" {
-  type    = string
-  default = null
+  description = "The S3 bucket location containing the function's deployment package. Conflicts with filename. This bucket must reside in the same AWS region where you are creating the Lambda function."
+  type        = string
+  default     = null
 }
 
 variable "s3_key" {
-  type    = string
-  default = null
+  description = "The S3 key of an object containing the function's deployment package. Conflicts with filename."
+  type        = string
+  default     = null
 }
 
 variable "s3_object_version" {
-  type    = string
-  default = null
+  description = "The object version containing the function's deployment package. Conflicts with filename."
+  type        = string
+  default     = null
 }
 
 variable "source_code_hash" {
-  type    = string
-  default = null
+  description = "Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either filename or s3_key."
+  type        = string
+  default     = null
 }
 
 variable "tags" {
-  type    = map(string)
-  default = null
+  description = "A mapping of tags to assign to the object."
+  type        = map(string)
+  default     = null
 }
 
 variable "timeout" {
-  type    = number
-  default = null
+  description = "The amount of time your Lambda Function has to run in seconds."
+  type        = number
+  default     = null
 }
 
 variable "tracing_config" {
+  description = "Provide this to configure tracing."
   type = object({
     mode = string
   })
@@ -178,6 +198,7 @@ variable "tracing_config" {
 }
 
 variable "vpc_config" {
+  description = "Provide this to allow your function to access your VPC."
   type = object({
     security_group_ids = list(string)
     subnet_ids         = list(string)
