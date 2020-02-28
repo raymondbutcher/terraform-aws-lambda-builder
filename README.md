@@ -105,3 +105,11 @@ The `DISABLED` build mode disables build functionality, making this module do no
 ## Automatic role creation
 
 If a `role` is not provided then one will be created automatically. There are various input variables which add policies to this role. If `dead_letter_config` or `vpc_config` are set, then the required policies are automatically attached to this role.
+
+<!--
+The Inputs and Outputs sections below are automatically generated
+in the master branch, so don't bother manually changing them.
+-->
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
