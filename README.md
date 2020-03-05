@@ -31,7 +31,7 @@ module "lambda_function" {
   source = "github.com/raymondbutcher/terraform-aws-lambda-builder"
 
   # Standard aws_lambda_function attributes.
-  function_name = module.lambda_role.function_name
+  function_name = "example"
   handler       = "lambda.handler"
   runtime       = "python3.6"
   s3_bucket     = aws_s3_bucket.packages.id
@@ -45,6 +45,8 @@ module "lambda_function" {
   role_cloudwatch_logs = true
 }
 ```
+
+See the [tests](tests) directory for more working examples.
 
 ## Build modes
 
