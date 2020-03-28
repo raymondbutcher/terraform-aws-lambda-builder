@@ -90,6 +90,7 @@ The `LAMBDA` build mode works as follows.
 | python2.7  | `pip` not included   |
 | python3.6  | `pip install` works  |
 | python3.7  | `pip install` works  |
+| python3.8  | waiting on [this](https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/80) |
 
 Runtimes not listed above have not been tested.
 
