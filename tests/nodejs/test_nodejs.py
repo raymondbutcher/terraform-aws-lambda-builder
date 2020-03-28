@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from pretf import test
 from pretf.aws import get_session
 
@@ -7,7 +8,10 @@ session = get_session(profile_name="rbutcher", region_name="eu-west-1")
 lambda_client = session.client("lambda")
 
 
-FUNCTION_NAME = "terraform-aws-lambda-builder-nodejs"
+FUNCTION_NAMES = [
+    "terraform-aws-lambda-builder-nodejs-10",
+    "terraform-aws-lambda-builder-nodejs-12",
+]
 
 
 class TestNodejs(test.SimpleTest):
@@ -19,24 +23,25 @@ class TestNodejs(test.SimpleTest):
 
         self.pretf.init()
 
-    def test_deploy_lambda_function(self):
+    def test_deploy_lambda_functions(self):
         """
-        Deploy the Lambda function.
+        Deploy the Lambda functions.
 
         """
 
         outputs = self.pretf.apply()
-        function_name = outputs["function_name"]
-        assert function_name == FUNCTION_NAME
+        function_names = outputs["function_names"]
+        assert function_names == FUNCTION_NAMES
 
-    def test_invoke_lambda_function(self):
+    @pytest.mark.parametrize("function_name", FUNCTION_NAMES)
+    def test_invoke_lambda_function(self, function_name):
         """
         Invoke the Lambda function to ensure jsonwebtoken works.
         (jsonwebtoken was installed by npm in the build script)
 
         """
 
-        response = lambda_client.invoke(FunctionName=FUNCTION_NAME)
+        response = lambda_client.invoke(FunctionName=function_name)
         payload = json.load(response["Payload"])
 
         assert payload["success"]

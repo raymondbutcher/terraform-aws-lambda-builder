@@ -1,24 +1,22 @@
 'use strict';
 
-const aws = require('aws-sdk');
-const cfnresponse = require('cfn-response');
-const fs = require('fs');
-const path = require('path');
-
-const { execSync } = require('child_process');
-
-const s3 = new aws.S3();
+const aws = require('aws-sdk'),
+  cfnresponse = require('cfn-response'),
+  fs = require('fs'),
+  path = require('path'),
+  { execSync } = require('child_process'),
+  s3 = new aws.S3();
 
 
 exports.handler = async (event, context) => {
-  let physicalResourceId = null;
-  let status = null;
+  let physicalResourceId = null,
+    status = null;
   try {
 
     console.log(JSON.stringify(event));
 
-    const bucket = event.ResourceProperties.Bucket;
-    const keyTarget = event.ResourceProperties.KeyTarget;
+    const bucket = event.ResourceProperties.Bucket,
+      keyTarget = event.ResourceProperties.KeyTarget;
     physicalResourceId = `arn:aws:s3:::${bucket}/${keyTarget}`;
 
     if (event.RequestType == "Create") {
@@ -56,37 +54,35 @@ exports.handler = async (event, context) => {
 
   } finally {
 
-    const data = {};
-    cfnresponse.send(event, context, status, data, physicalResourceId);
-
     // cfnresponse calls context.done() when it has finished
-    // so just wait here until that happens.
+    cfnresponse.send(event, context, status, {}, physicalResourceId);
     await new Promise(function (resolve) { });
+
   }
 };
 
 async function createZip(event) {
-  const p = event.ResourceProperties;
-  const bucket = p.Bucket;
-  const keySource = p.KeySource;
-  const keyTarget = p.KeyTarget;
+  const p = event.ResourceProperties,
+    bucket = p.Bucket,
+    keySource = p.KeySource,
+    keyTarget = p.KeyTarget,
+    env = Object.assign({}, process.env);
 
-  // npm writes to home dir which is readonly in Lambda
-  const env = Object.assign({}, process.env);
-  env.HOME = '/tmp';
+  env.HOME = '/tmp'; // npm writes to home dir which is readonly in Lambda
 
   console.log('Installing yazl');
-  execSync('npm install yazl', { 'cwd': '/tmp', 'env': env });
-  const yazl = require('/tmp/node_modules/yazl');
+  execSync('npm install yazl unzipper', { 'cwd': '/tmp', 'env': env });
+  const yazl = require('/tmp/node_modules/yazl'),
+    unzipper = require('/tmp/node_modules/unzipper');
 
   const downloadPath = "/tmp/source.zip";
   console.log(`Downloading s3://${bucket}/${keySource} to ${downloadPath}`);
   const obj = await s3.getObject({ Bucket: bucket, Key: keySource }).promise();
   await new Promise(resolve => {
-    const stream = fs.createWriteStream(downloadPath);
-    stream.on('finish', resolve);
-    stream.write(obj.Body);
-    stream.end();
+    const s = fs.createWriteStream(downloadPath);
+    s.on('finish', resolve);
+    s.write(obj.Body);
+    s.end();
   });
 
   const buildPath = "/tmp/build";
@@ -96,7 +92,9 @@ async function createZip(event) {
   process.chdir(buildPath);
 
   console.log(`Extracting ${downloadPath} to ${buildPath}`);
-  execSync(`unzip ${downloadPath}`);
+  await new Promise(resolve => {
+    fs.createReadStream(downloadPath).pipe(unzipper.Extract({ path: buildPath }).on("close", resolve));
+  });
   fs.unlinkSync(downloadPath);
 
   console.log("Running build script");
@@ -121,10 +119,10 @@ async function createZip(event) {
 }
 
 async function deleteZip(physicalResourceId) {
-  const arnParts = physicalResourceId.split(":");
-  const bucketAndKey = arnParts[arnParts.length - 1];
-  const bucket = bucketAndKey.substring(0, bucketAndKey.indexOf('/'));
-  const key = bucketAndKey.substring(bucketAndKey.indexOf('/') + 1);
+  const arnParts = physicalResourceId.split(":"),
+    bucketAndKey = arnParts[arnParts.length - 1],
+    bucket = bucketAndKey.substring(0, bucketAndKey.indexOf('/')),
+    key = bucketAndKey.substring(bucketAndKey.indexOf('/') + 1);
 
   console.log(`Deleting s3://${bucket}/${key}`);
   await s3.deleteObject({ Bucket: bucket, Key: key }).promise();
@@ -133,8 +131,8 @@ async function deleteZip(physicalResourceId) {
 function* walkSync(dir) {
   const files = fs.readdirSync(dir);
   for (const file of files) {
-    const fpath = path.join(dir, file);
-    const isDir = fs.statSync(fpath).isDirectory();
+    const fpath = path.join(dir, file),
+      isDir = fs.statSync(fpath).isDirectory();
     if (isDir) {
       yield* walkSync(fpath);
     } else {

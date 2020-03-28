@@ -9,3 +9,7 @@ all:
 clean:
 	find tests -maxdepth 3 -name '*.json' -delete
 	find zip_files -name '*.zip' -delete
+
+.PHONY: test tests
+test tests:
+	pytest -v tests
