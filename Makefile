@@ -12,4 +12,4 @@ clean:
 
 .PHONY: test tests
 test tests:
-	pytest -v tests
+	pytest -v -n auto --dist=loadfile tests
