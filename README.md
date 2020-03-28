@@ -1,6 +1,6 @@
 # terraform-aws-lambda-builder
 
-This Terraform module packages and deploys an AWS Lambda function. It optionally runs a build script *inside Lambda* to build the Lambda package.
+This Terraform module packages and deploys an AWS Lambda function. It optionally runs a build script *inside Lambda or CodeBuild* to build the Lambda package. This is great for building and deploying Go, Node.js, Python and other Lambda functions without needing any of their toolchains installed.
 
 ## Features
 
@@ -8,13 +8,18 @@ This Terraform module packages and deploys an AWS Lambda function. It optionally
     * Handles source code changes automatically and correctly.
     * No unexpected changes in Terraform plans.
 * Supports `LAMBDA build_mode` to run a build scripts inside Lambda.
-    * Define your own build script with shell commands like `pip install`, `npm install`, etc.
     * Runs inside Lambda using the same runtime environment as the target Lambda function.
-    * No reliance on `pip`, `virtualenv`, `npm`, etc on the machine running Terraform.
+    * Define your own build script with shell commands like `pip install`, `npm install`, etc.
+    * No reliance on `pip`, `virtualenv`, `npm`, etc being on the machine running Terraform.
     * Smaller zip files to upload because `pip install`, etc. doesn't run locally.
+* Supports `CODEBUILD build_mode` to run inside CodeBuild.
+    * Define your own build steps in `buildspec.yml` with shell commands like `go build`, etc.
+    * No reliance on `go`, etc being on the machine running Terraform.
+    * Smaller zip files to upload because `go get`, `go build`, etc. doesn't run locally.
 * Supports `S3/FILENAME build_mode` to just get the zip functionality.
-    * For when there are no build steps but you still want the `source_dir` functionality.
+    * For when there are no build steps but you still want the `source_dir` zip functionality.
 * Helps you to avoid:
+    * Extra setup requirements on the machine running Terraform.
     * Separate build steps to create packages before running Terraform.
     * Committing built package zip files to version control.
 
@@ -52,6 +57,8 @@ See the [tests](tests) directory for more working examples.
 
 The `build_mode` input variable can be set to one of:
 
+* `CODEBUILD`
+    * Zips `source_dir`, uploads it to `s3_bucket` and runs CodeBuild to build the final package.
 * `LAMBDA`
     * Zips `source_dir`, uploads it to `s3_bucket` and runs `build.sh` inside Lambda to build the final package.
 * `S3`
@@ -60,6 +67,28 @@ The `build_mode` input variable can be set to one of:
     * Zips `source_dir` and uploads it directly to the Lambda service.
 * `DISABLED` (default)
     * Disables build functionality.
+
+### CodeBuild build mode
+
+If running in `CODEBUILD` build mode, then this module will use CodeBuild and your `buildspec.yml` file to create a new package for the Lambda function to use.
+
+The `CODEBUILD` build mode works as follows.
+
+* Terraform runs [zip.py](https://github.com/raymondbutcher/terraform-archive-stable) which:
+    * Creates a zip file from the source directory.
+    * Timestamps and permissions are normalised so the resulting file hash is consistent and only affected by meaningful changes.
+* Terraform uploads the zip file to the S3 bucket.
+* Terraform creates a CloudFormation stack which:
+    * Creates a CodeBuild project which:
+        * Uses the S3 bucket zip file as the source.
+        * Uses the `buildspec.yml` file from the zipped source directory.
+        * Should build and output artifacts to include in the new zip file.
+    * Creates a custom resource Lambda function which:
+        * Starts the CodeBuild project.
+        * Gets invoked again when CodeBuild finishes.
+        * Verifies that CodeBuild has uploaded the new zip file.
+    * Outputs the location of the new zip file for Terraform to use.
+* Terraform creates a Lambda function using the new zip file.
 
 ### Lambda build mode
 
@@ -90,7 +119,7 @@ The `LAMBDA` build mode works as follows.
 | python2.7  | `pip` not included   |
 | python3.6  | `pip install` works  |
 | python3.7  | `pip install` works  |
-| python3.8  | waiting on [this](https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/80) |
+| python3.8  | waiting on [this](https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/80), try CodeBuild instead |
 
 Runtimes not listed above have not been tested.
 

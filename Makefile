@@ -1,8 +1,8 @@
 .PHONY: all
 all:
-	isort --recursive *.py lambda_builders tests
-	black *.py lambda_builders tests
-	flake8 --ignore E501 *.py lambda_builders tests
+	isort --recursive *.py codebuild_builder lambda_builders tests
+	black *.py codebuild_builder lambda_builders tests
+	flake8 --ignore E501 *.py codebuild_builder lambda_builders tests
 	terraform fmt -recursive
 
 .PHONY: clean

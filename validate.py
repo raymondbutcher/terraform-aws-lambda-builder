@@ -5,6 +5,7 @@ import os
 import sys
 import time
 
+CODEBUILD = "CODEBUILD"
 DISABLED = "DISABLED"
 FILENAME = "FILENAME"
 LAMBDA = "LAMBDA"
@@ -31,7 +32,12 @@ def require(*names):
             sys.exit(1)
 
 
-if query["build_mode"] == DISABLED:
+if query["build_mode"] in (CODEBUILD, LAMBDA):
+
+    require("s3_bucket", "source_dir")
+    conflict("filename", "s3_key", "s3_object_version", "source_code_hash")
+
+elif query["build_mode"] == DISABLED:
 
     conflict("source_dir")
 
@@ -39,11 +45,6 @@ elif query["build_mode"] == FILENAME:
 
     require("filename", "source_dir")
     conflict("s3_bucket", "s3_key", "s3_object_version", "source_code_hash")
-
-elif query["build_mode"] == LAMBDA:
-
-    require("s3_bucket", "source_dir")
-    conflict("filename", "s3_key", "s3_object_version", "source_code_hash")
 
 elif query["build_mode"] == S3:
 

@@ -20,19 +20,19 @@ data "external" "validate" {
 
 ###############################################
 # Create a zip file from the source directory #
-# (if build mode is FILENAME, LAMBDA, S3)     #
+# (if build mode is not DISABLED)             #
 ###############################################
 
 data "aws_caller_identity" "current" {
-  count = var.enabled && (var.build_mode == "LAMBDA" || var.build_mode == "S3") ? 1 : 0
+  count = var.enabled && var.build_mode != "DISABLED" ? 1 : 0
 }
 
 data "aws_partition" "current" {
-  count = var.enabled && (var.build_mode == "LAMBDA" || var.build_mode == "S3") ? 1 : 0
+  count = var.enabled && var.build_mode != "DISABLED" ? 1 : 0
 }
 
 data "aws_region" "current" {
-  count = var.enabled && (var.build_mode == "LAMBDA" || var.build_mode == "S3") ? 1 : 0
+  count = var.enabled && var.build_mode != "DISABLED" ? 1 : 0
 }
 
 module "source_zip_file" {
@@ -45,16 +45,16 @@ module "source_zip_file" {
   source_dir  = var.source_dir
 }
 
-#################################
-# Upload the zip file to S3     #
-# (if build mode is LAMBDA, S3) #
-#################################
+############################################
+# Upload the zip file to S3                #
+# (if build mode is CODEBUILD, LAMBDA, S3) #
+############################################
 
 resource "aws_s3_bucket_object" "source_zip_file" {
-  count = var.enabled && (var.build_mode == "LAMBDA" || var.build_mode == "S3") ? 1 : 0
+  count = var.enabled && contains(["CODEBUILD", "LAMBDA", "S3"], var.build_mode) ? 1 : 0
 
   bucket = var.s3_bucket
-  key    = var.build_mode == "LAMBDA" ? "${var.function_name}/${module.source_zip_file.output_sha}/source.zip" : var.s3_key
+  key    = contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? "${var.function_name}/${module.source_zip_file.output_sha}/source.zip" : var.s3_key
   source = module.source_zip_file.output_path
 
   lifecycle {
@@ -63,42 +63,54 @@ resource "aws_s3_bucket_object" "source_zip_file" {
 }
 
 locals {
-  source_zip_file_s3_key = var.enabled && (var.build_mode == "LAMBDA" || var.build_mode == "S3") ? aws_s3_bucket_object.source_zip_file[0].key : null
+  source_zip_file_s3_key = var.enabled && contains(["CODEBUILD", "LAMBDA", "S3"], var.build_mode) ? aws_s3_bucket_object.source_zip_file[0].key : null
 }
 
-#######################################
-# Build the final package with Lambda #
-# (if build mode is LAMBDA)           #
-#######################################
+###############################################
+# Build the final package with CloudFormation #
+# (if build mode is CODEBUILD, LAMBDA)        #
+###############################################
 
 locals {
-  builder_filenames = {
+  cloudformation_parameters = {
+    Bucket    = var.s3_bucket
+    KeyPrefix = var.function_name
+    KeySource = local.source_zip_file_s3_key
+  }
+  codebuild_cloudformation_template_body = var.enabled && var.build_mode == "CODEBUILD" ? templatefile("${path.module}/codebuild_builder/cfn.yaml.tmpl", {
+    codebuild_environment_compute_type  = var.codebuild_environment_compute_type
+    codebuild_environment_image         = var.codebuild_environment_image
+    codebuild_environment_type          = var.codebuild_environment_type
+    codebuild_queued_timeout_in_minutes = var.codebuild_queued_timeout_in_minutes
+    codebuild_timeout_in_minutes        = var.codebuild_timeout_in_minutes
+    lambda_builder_code                 = file("${path.module}/codebuild_builder/lambda.py")
+    lambda_builder_handler              = "index.handler"
+    lambda_builder_memory_size          = 128
+    lambda_builder_runtime              = "python3.7"
+    lambda_builder_timeout              = 60
+  }) : null
+  lambda_builder_filenames = {
     "nodejs10.x" = "nodejs.js"
     "nodejs12.x" = "nodejs.js"
     "python2.7"  = "python.py"
     "python3.6"  = "python.py"
     "python3.7"  = "python.py"
   }
-  cloudformation_parameters = {
-    Bucket    = var.s3_bucket
-    KeyPrefix = var.function_name
-    KeySource = local.source_zip_file_s3_key
-    Runtime   = var.runtime
-  }
-  cloudformation_template_body = templatefile("${path.module}/lambda_builders/cfn.yaml.tmpl", {
-    lambda_code        = file("${path.module}/lambda_builders/${local.builder_filenames[var.runtime]}")
-    lambda_handler     = "index.handler"
-    lambda_memory_size = var.builder_memory_size
-    lambda_runtime     = var.runtime
-    lambda_timeout     = var.builder_timeout
-  })
+  lambda_cloudformation_template_body = var.enabled && var.build_mode == "LAMBDA" ? templatefile("${path.module}/lambda_builders/cfn.yaml.tmpl", {
+    lambda_builder_code        = file("${path.module}/lambda_builders/${local.lambda_builder_filenames[var.runtime]}")
+    lambda_builder_handler     = "index.handler"
+    lambda_builder_memory_size = var.lambda_builder_memory_size
+    lambda_builder_timeout     = var.lambda_builder_timeout
+    lambda_runtime             = var.runtime
+  }) : null
+  cloudformation_template_body = coalesce(local.codebuild_cloudformation_template_body, local.lambda_cloudformation_template_body, "unused")
 }
 
 # Create a random build_id that changes when the source zip
 # or CloudFormation details changes.
 
 resource "random_string" "build_id" {
-  count = var.enabled && var.build_mode == "LAMBDA" ? 1 : 0
+  count = var.enabled && contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? 1 : 0
 
   length  = 16
   upper   = false
@@ -116,15 +128,23 @@ resource "random_string" "build_id" {
 # the stack to be recreated. The result is a new build whenever
 # there are changes to the source_dir or changes to this module.
 
+locals {
+  key_target_path = "${var.function_name}/${module.source_zip_file.output_sha}"
+  key_target_name = "${random_string.build_id[0].result}.zip"
+  key_target      = "${local.key_target_path}/${local.key_target_name}"
+}
+
 resource "aws_cloudformation_stack" "builder" {
-  count = var.enabled && var.build_mode == "LAMBDA" ? 1 : 0
+  count = var.enabled && contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? 1 : 0
 
   name         = "${var.s3_bucket}-${random_string.build_id[0].result}"
   capabilities = ["CAPABILITY_IAM"]
   on_failure   = "DELETE"
 
   parameters = merge(local.cloudformation_parameters, {
-    KeyTarget = "${var.function_name}/${module.source_zip_file.output_sha}/${random_string.build_id[0].result}.zip"
+    KeyTarget     = local.key_target
+    KeyTargetName = local.key_target_name
+    KeyTargetPath = local.key_target_path
   })
 
   template_body = local.cloudformation_template_body
@@ -135,7 +155,7 @@ resource "aws_cloudformation_stack" "builder" {
 }
 
 locals {
-  built_s3_key = var.enabled && var.build_mode == "LAMBDA" ? aws_cloudformation_stack.builder[0].outputs.Key : null
+  built_s3_key = var.enabled && contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? aws_cloudformation_stack.builder[0].outputs.Key : null
 }
 
 #######################################
@@ -178,9 +198,9 @@ resource "aws_lambda_function" "built" {
   role                           = var.role != null ? var.role : module.role.arn
   runtime                        = var.runtime
   s3_bucket                      = var.s3_bucket
-  s3_key                         = var.build_mode == "LAMBDA" ? local.built_s3_key : var.s3_key
+  s3_key                         = contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? local.built_s3_key : var.s3_key
   s3_object_version              = var.s3_object_version
-  source_code_hash               = var.build_mode == "FILENAME" || var.build_mode == "S3" ? module.source_zip_file.output_base64sha256 : var.source_code_hash
+  source_code_hash               = contains(["FILENAME", "S3"], var.build_mode) ? module.source_zip_file.output_base64sha256 : var.source_code_hash
   tags                           = var.tags
   timeout                        = var.timeout
 

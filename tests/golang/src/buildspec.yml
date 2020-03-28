@@ -1,0 +1,21 @@
+version: 0.2
+
+env:
+  variables:
+    GOARCH: amd64
+    GOOS: linux
+
+phases:
+  pre_build:
+    commands:
+      - ln -s "${CODEBUILD_SRC_DIR}" /go/src/lambda
+      - cd /go/src/lambda
+      - go get -d -v ./...
+  build:
+    commands:
+      - go test
+      - go build -o main main.go
+
+artifacts:
+  files:
+    - main

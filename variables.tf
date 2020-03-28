@@ -1,21 +1,38 @@
 # Builder arguments.
 
 variable "build_mode" {
-  description = "The build mode to use, one of `DISABLED`, `FILENAME`, `LAMBDA`, `S3`."
+  description = "The build mode to use, one of `CODEBUILD`, `DISABLED`, `FILENAME`, `LAMBDA`, `S3`."
   type        = string
   default     = "DISABLED"
 }
 
-variable "builder_memory_size" {
-  description = "Memory size for the builder Lambda function."
-  type        = number
-  default     = 512
+variable "codebuild_environment_compute_type" {
+  description = "Compute type for CodeBuild. See https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html"
+  type        = string
+  default     = "BUILD_GENERAL1_SMALL"
 }
 
-variable "builder_timeout" {
-  description = "Timeout for the builder Lambda function."
+variable "codebuild_environment_image" {
+  description = "Image for CodeBuild. See https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html"
+  type        = string
+  default     = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+}
+
+variable "codebuild_environment_type" {
+  description = "The type of CodeBuild build environment to use. See https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html"
+  default     = "LINUX_CONTAINER"
+}
+
+variable "codebuild_queued_timeout_in_minutes" {
+  description = "The number of minutes CodeBuild is allowed to be queued before it times out."
   type        = number
-  default     = 900
+  default     = 15
+}
+
+variable "codebuild_timeout_in_minutes" {
+  description = "The number of minutes CodeBuild is allowed to run before it times out."
+  type        = number
+  default     = 60
 }
 
 variable "create_role" {
@@ -34,6 +51,18 @@ variable "enabled" {
   description = "Create resources."
   type        = bool
   default     = true
+}
+
+variable "lambda_builder_memory_size" {
+  description = "Memory size for the builder Lambda function."
+  type        = number
+  default     = 512
+}
+
+variable "lambda_builder_timeout" {
+  description = "Timeout for the builder Lambda function."
+  type        = number
+  default     = 900
 }
 
 variable "role_cloudwatch_logs" {

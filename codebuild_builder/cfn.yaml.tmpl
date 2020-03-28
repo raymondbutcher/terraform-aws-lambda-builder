@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Builds a Lambda function
+Parameters:
+  Bucket:
+    Description: S3 bucket containing Lambda packages
+    Type: String
+  KeyPrefix:
+    Description: S3 key prefix for Lambda files
+    Type: String
+  KeySource:
+    Description: S3 key for this Lambda function's source zip
+    Type: String
+  KeyTarget:
+    Description: S3 key for the built package zip
+    Type: String
+  KeyTargetPath:
+    Description: S3 key path for the built package zip
+    Type: String
+  KeyTargetName:
+    Description: S3 key name for the built package zip
+    Type: String
+Resources:
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub "arn:aws:logs:$${AWS::Region}:$${AWS::AccountId}:log-group:/aws/codebuild/*:*"
+              - Sid: AllowLambdaToCreateLogGroups
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                Resource: !Sub "arn:aws:logs:$${AWS::Region}:$${AWS::AccountId}:*"
+        - PolicyName: S3
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub "arn:aws:s3:::$${Bucket}/$${KeyPrefix}/*"
+  CodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts: 
+        Type: S3
+        Location: !Ref Bucket
+        Path: !Ref KeyTargetPath
+        Name: !Ref KeyTargetName
+        Packaging: ZIP
+      Description: !Sub "Builds s3://$${Bucket}/$${KeyTarget}"
+      Environment:
+        ComputeType: ${jsonencode(codebuild_environment_compute_type)}
+        Image: ${jsonencode(codebuild_environment_image)}
+        Type: ${jsonencode(codebuild_environment_type)}
+      QueuedTimeoutInMinutes: ${jsonencode(codebuild_queued_timeout_in_minutes)}
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source: 
+        Type: S3
+        Location: !Sub "$${Bucket}/$${KeySource}"
+      TimeoutInMinutes: ${jsonencode(codebuild_timeout_in_minutes)}
+  CodeBuildEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern: { "source": [ "aws.codebuild" ], "detail-type": [ "CodeBuild Build State Change" ], "detail": { "build-status": [ "FAILED", "STOPPED", "SUCCEEDED" ], "project-name": [ !Ref CodeBuild ] } }
+      Targets: 
+        - Arn: !GetAtt LambdaFunction.Arn
+          Id: !Ref LambdaFunction
+  CodeBuildEventPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt CodeBuildEvent.Arn
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuild
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:StartBuild
+                Resource: !GetAtt CodeBuild.Arn
+        - PolicyName: Logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Sub "arn:aws:logs:$${AWS::Region}:$${AWS::AccountId}:log-group:/aws/lambda/*:*"
+              - Sid: AllowLambdaToCreateLogGroups
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                Resource: !Sub "arn:aws:logs:$${AWS::Region}:$${AWS::AccountId}:*"
+        - PolicyName: S3
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub "arn:aws:s3:::$${Bucket}/$${KeyPrefix}/*"
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: !Sub "Builds s3://$${Bucket}/$${KeyTarget}"
+      Handler: ${jsonencode(lambda_builder_handler)}
+      MemorySize: ${jsonencode(lambda_builder_memory_size)}
+      Runtime: ${jsonencode(lambda_builder_runtime)}
+      Timeout: ${jsonencode(lambda_builder_timeout)}
+      Code:
+        ZipFile: ${jsonencode(lambda_builder_code)}
+      Role: !GetAtt LambdaRole.Arn
+  LambdaPackage:
+    Type: Custom::LambdaPackage
+    Properties:
+      ServiceToken: !GetAtt LambdaFunction.Arn
+      CodeBuildProjectName: !Ref CodeBuild
+      CodeBuildEvent: !Ref CodeBuildEvent # ensures the event rule exists before lambda and codebuild
+      Bucket: !Ref Bucket
+      KeyTarget: !Ref KeyTarget
+Outputs:
+  Bucket:
+    Description: S3 bucket containing the built Lambda package
+    Value: !Ref Bucket
+  Key:
+    Description: S3 key for the built Lambda package
+    Value: !Ref KeyTarget
