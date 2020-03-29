@@ -1,3 +1,8 @@
+provider "aws" {
+  profile = "rbutcher"
+  region  = "eu-west-1"
+}
+
 resource "random_id" "bucket_name" {
   prefix      = "terraform-aws-lambda-builder-tests-"
   byte_length = 8
