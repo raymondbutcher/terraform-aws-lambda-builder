@@ -1,5 +1,11 @@
 # terraform-aws-lambda-builder changes
 
+## v1.0.1
+
+### Fixed
+
+* Fixed dependency in S3 mode
+
 ## v1.0.0
 
 ### Added
