@@ -198,7 +198,7 @@ resource "aws_lambda_function" "built" {
   role                           = var.role != null ? var.role : module.role.arn
   runtime                        = var.runtime
   s3_bucket                      = var.s3_bucket
-  s3_key                         = contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? local.built_s3_key : var.s3_key
+  s3_key                         = contains(["CODEBUILD", "LAMBDA", "S3"], var.build_mode) ? coalesce(local.built_s3_key, local.source_zip_file_s3_key) : var.s3_key
   s3_object_version              = var.s3_object_version
   source_code_hash               = contains(["FILENAME", "S3"], var.build_mode) ? module.source_zip_file.output_base64sha256 : var.source_code_hash
   tags                           = var.tags
