@@ -1,6 +1,6 @@
 # terraform-aws-lambda-builder changes
 
-## [Unreleased]
+## v1.0.0
 
 ### Added
 
