@@ -172,11 +172,16 @@ in the master branch, so don't bother manually changing them.
 | timeout | The amount of time your Lambda Function has to run in seconds. | `number` | n/a | yes |
 | tracing\_config | Provide this to configure tracing. | <pre>object({<br>    mode = string<br>  })<br></pre> | n/a | yes |
 | vpc\_config | Provide this to allow your function to access your VPC. | <pre>object({<br>    security_group_ids = list(string)<br>    subnet_ids         = list(string)<br>  })<br></pre> | n/a | yes |
-| build\_mode | The build mode to use, one of `DISABLED`, `FILENAME`, `LAMBDA`, `S3`. | `string` | `"DISABLED"` | no |
-| builder\_memory\_size | Memory size for the builder Lambda function. | `number` | `512` | no |
-| builder\_timeout | Timeout for the builder Lambda function. | `number` | `900` | no |
+| build\_mode | The build mode to use, one of `CODEBUILD`, `DISABLED`, `FILENAME`, `LAMBDA`, `S3`. | `string` | `"DISABLED"` | no |
+| codebuild\_environment\_compute\_type | Compute type for CodeBuild. See https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html | `string` | `"BUILD_GENERAL1_SMALL"` | no |
+| codebuild\_environment\_image | Image for CodeBuild. See https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html | `string` | `"aws/codebuild/amazonlinux2-x86_64-standard:3.0"` | no |
+| codebuild\_environment\_type | The type of CodeBuild build environment to use. See https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html | `string` | `"LINUX_CONTAINER"` | no |
+| codebuild\_queued\_timeout\_in\_minutes | The number of minutes CodeBuild is allowed to be queued before it times out. | `number` | `15` | no |
+| codebuild\_timeout\_in\_minutes | The number of minutes CodeBuild is allowed to run before it times out. | `number` | `60` | no |
 | empty\_dirs | Include empty directories in the Lambda package. | `bool` | `false` | no |
 | enabled | Create resources. | `bool` | `true` | no |
+| lambda\_builder\_memory\_size | Memory size for the builder Lambda function. | `number` | `512` | no |
+| lambda\_builder\_timeout | Timeout for the builder Lambda function. | `number` | `900` | no |
 | role\_cloudwatch\_logs | If `role` is not provided, one will be created with a policy that enables CloudWatch Logs. | `bool` | `false` | no |
 | role\_custom\_policies | If `role` is not provided, one will be created with these JSON policies attached. | `list(string)` | `[]` | no |
 | role\_policy\_arns | If `role` is not provided, one will be created with these policy ARNs attached. | `list(string)` | `[]` | no |
