@@ -110,7 +110,7 @@ locals {
 # or CloudFormation details changes.
 
 resource "random_string" "build_id" {
-  count = var.enabled && contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? 1 : 0
+  count = var.enabled ? 1 : 0
 
   length  = 16
   upper   = false
