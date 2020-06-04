@@ -41,7 +41,7 @@ module "source_zip_file" {
   enabled = var.enabled && var.build_mode != "DISABLED"
 
   empty_dirs  = var.empty_dirs
-  output_path = var.build_mode == "FILENAME" ? var.filename : "${path.module}/zip_files/${data.aws_partition.current[0].partition}-${data.aws_region.current[0].name}-${data.aws_caller_identity.current[0].account_id}-${var.function_name}.zip"
+  output_path = var.enabled && var.build_mode == "FILENAME" ? var.filename : var.enabled && var.build_mode != "DISABLED" ? "${path.module}/zip_files/${data.aws_partition.current[0].partition}-${data.aws_region.current[0].name}-${data.aws_caller_identity.current[0].account_id}-${var.function_name}.zip" : ""
   source_dir  = var.source_dir
 }
 
@@ -128,12 +128,6 @@ resource "random_string" "build_id" {
 # the stack to be recreated. The result is a new build whenever
 # there are changes to the source_dir or changes to this module.
 
-locals {
-  key_target_path = "${var.function_name}/${module.source_zip_file.output_sha}"
-  key_target_name = "${random_string.build_id[0].result}.zip"
-  key_target      = "${local.key_target_path}/${local.key_target_name}"
-}
-
 resource "aws_cloudformation_stack" "builder" {
   count = var.enabled && contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? 1 : 0
 
@@ -142,9 +136,9 @@ resource "aws_cloudformation_stack" "builder" {
   on_failure   = "DELETE"
 
   parameters = merge(local.cloudformation_parameters, {
-    KeyTarget     = local.key_target
-    KeyTargetName = local.key_target_name
-    KeyTargetPath = local.key_target_path
+    KeyTarget     = "${var.function_name}/${module.source_zip_file.output_sha}/${random_string.build_id[0].result}.zip"
+    KeyTargetName = "${random_string.build_id[0].result}.zip"
+    KeyTargetPath = "${var.function_name}/${module.source_zip_file.output_sha}"
   })
 
   template_body = local.cloudformation_template_body
