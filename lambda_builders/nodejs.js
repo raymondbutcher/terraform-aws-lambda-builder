@@ -100,7 +100,7 @@ async function createZip(event) {
   console.log("Running build script");
   fs.chmodSync("./build.sh", "755");
   execSync("ls -alh");
-  execSync("./build.sh", { env: env });
+  execSync("./build.sh", { env: env, stdio: "inherit" });
 
   const builtPath = "/tmp/built.zip";
   console.log(`Creating ${builtPath} from ${buildPath}`);
