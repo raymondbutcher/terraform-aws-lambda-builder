@@ -4,9 +4,8 @@ const aws = require('aws-sdk'),
   cfnresponse = require('cfn-response'),
   fs = require('fs'),
   path = require('path'),
-  { execSync } = require('child_process'),
+  cp = require('child_process'),
   s3 = new aws.S3();
-
 
 exports.handler = async (event, context) => {
   let physicalResourceId = null,
@@ -70,8 +69,10 @@ async function createZip(event) {
 
   env.HOME = '/tmp'; // npm writes to home dir which is readonly in Lambda
 
+  const exec = (cmd, cwd) => cp.execSync(cmd, { cwd, env, stdio: 'inherit' });
+
   console.log('Installing yazl');
-  execSync('npm install yazl unzipper', { 'cwd': '/tmp', 'env': env });
+  exec('npm install yazl unzipper', '/tmp');
   const yazl = require('/tmp/node_modules/yazl'),
     unzipper = require('/tmp/node_modules/unzipper');
 
@@ -87,8 +88,8 @@ async function createZip(event) {
 
   const buildPath = "/tmp/build";
   console.log(`Preparing build path ${buildPath}`);
-  execSync(`rm -rf ${buildPath}`);
-  execSync(`mkdir ${buildPath}`);
+  exec(`rm -rf ${buildPath}`);
+  exec(`mkdir ${buildPath}`);
   process.chdir(buildPath);
 
   console.log(`Extracting ${downloadPath} to ${buildPath}`);
@@ -99,8 +100,8 @@ async function createZip(event) {
 
   console.log("Running build script");
   fs.chmodSync("./build.sh", "755");
-  execSync("ls -alh");
-  execSync("./build.sh", { env: env, stdio: "inherit" });
+  exec("ls -alh");
+  exec("./build.sh");
 
   const builtPath = "/tmp/built.zip";
   console.log(`Creating ${builtPath} from ${buildPath}`);
@@ -118,8 +119,8 @@ async function createZip(event) {
   await s3.putObject({ Bucket: bucket, Key: keyTarget, Body: fs.createReadStream(builtPath) }).promise();
 }
 
-async function deleteZip(physicalResourceId) {
-  const arnParts = physicalResourceId.split(":"),
+async function deleteZip(resourceId) {
+  const arnParts = resourceId.split(":"),
     bucketAndKey = arnParts[arnParts.length - 1],
     bucket = bucketAndKey.substring(0, bucketAndKey.indexOf('/')),
     key = bucketAndKey.substring(bucketAndKey.indexOf('/') + 1);
