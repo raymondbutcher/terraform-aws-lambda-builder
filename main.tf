@@ -14,7 +14,7 @@ data "external" "validate" {
     s3_object_version = var.s3_object_version != null ? var.s3_object_version : ""
     source_code_hash  = var.source_code_hash != null ? var.source_code_hash : ""
     source_dir        = var.source_dir
-    zip_files_dir     = "${path.module}/zip_files"
+    zip_files_dir     = var.compile_output_dir != null ? var.compile_output_dir : "${path.module}/zip_files"
   }
 }
 
@@ -41,7 +41,7 @@ module "source_zip_file" {
   enabled = var.enabled && var.build_mode != "DISABLED"
 
   empty_dirs  = var.empty_dirs
-  output_path = var.enabled && var.build_mode == "FILENAME" ? var.filename : var.enabled && var.build_mode != "DISABLED" ? "${path.module}/zip_files/${data.aws_partition.current[0].partition}-${data.aws_region.current[0].name}-${data.aws_caller_identity.current[0].account_id}-${var.function_name}.zip" : ""
+  output_path = var.enabled && var.build_mode == "FILENAME" ? var.filename : var.enabled && var.build_mode != "DISABLED" ? "${local.compile_output_dir}/${data.aws_partition.current[0].partition}-${data.aws_region.current[0].name}-${data.aws_caller_identity.current[0].account_id}-${var.function_name}.zip" : ""
   source_dir  = var.source_dir
 }
 
@@ -72,6 +72,7 @@ locals {
 ###############################################
 
 locals {
+  compile_output_dir     = var.compile_output_dir != null ? var.compile_output_dir : "${path.module}/zip_files"
   cloudformation_parameters = {
     Bucket    = var.s3_bucket
     KeyPrefix = var.function_name

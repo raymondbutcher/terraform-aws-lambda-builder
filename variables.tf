@@ -131,6 +131,12 @@ variable "filename" {
   default     = null
 }
 
+variable "compile_output_dir" {
+  description = "The path to the compilation output directory where all zip files and compiled resources will be stored."
+  type        = string
+  default     = null
+}
+
 variable "function_name" {
   description = "A unique name for your Lambda Function."
   type        = string
