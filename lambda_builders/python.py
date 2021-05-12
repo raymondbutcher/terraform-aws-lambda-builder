@@ -4,7 +4,6 @@ import shutil
 import zipfile
 
 import boto3
-
 import cfnresponse
 
 s3_client = boto3.client("s3")
