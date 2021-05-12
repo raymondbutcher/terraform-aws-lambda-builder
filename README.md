@@ -116,6 +116,7 @@ The `LAMBDA` build mode works as follows.
 |------------|----------------------|
 | nodejs10.x | `npm install` works  |
 | nodejs12.x | `npm install` works  |
+| nodejs14.x  | waiting on [this](https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/80), try CodeBuild instead |
 | python2.7  | `pip` not included   |
 | python3.6  | `pip install` works  |
 | python3.7  | `pip install` works  |
