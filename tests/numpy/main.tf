@@ -39,9 +39,23 @@ module "lambda_function_37" {
   timeout              = 30
 }
 
+module "lambda_function_38" {
+  source = "../../"
+
+  build_mode           = "LAMBDA"
+  function_name        = "terraform-aws-lambda-builder-numpy-38"
+  handler              = "lambda.handler"
+  role_cloudwatch_logs = true
+  runtime              = "python3.8"
+  s3_bucket            = aws_s3_bucket.packages.id
+  source_dir           = "${path.module}/src"
+  timeout              = 30
+}
+
 output "function_names" {
   value = [
     module.lambda_function_36.function_name,
     module.lambda_function_37.function_name,
+    module.lambda_function_38.function_name,
   ]
 }
