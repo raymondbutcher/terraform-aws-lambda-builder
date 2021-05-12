@@ -9,13 +9,13 @@ lambda_client = session.client("lambda")
 
 
 FUNCTION_NAMES = [
-    "terraform-aws-lambda-builder-numpy-36",
-    "terraform-aws-lambda-builder-numpy-37",
-    "terraform-aws-lambda-builder-numpy-38",
+    "terraform-aws-lambda-builder-python-36",
+    "terraform-aws-lambda-builder-python-37",
+    "terraform-aws-lambda-builder-python-38",
 ]
 
 
-class TestNumpy(test.SimpleTest):
+class TestPython(test.SimpleTest):
     def test_init_terraform(self):
         """
         Configure and initialize the backend.
@@ -37,8 +37,9 @@ class TestNumpy(test.SimpleTest):
     @pytest.mark.parametrize("function_name", FUNCTION_NAMES)
     def test_invoke_lambda_function(self, function_name):
         """
-        Invoke the Lambda function to ensure numpy works.
-        (numpy was installed by pip in the build script)
+        Invoke the Lambda function to ensure it works.
+        The function uses numpy which should have been
+        installed by build script.
 
         """
 
