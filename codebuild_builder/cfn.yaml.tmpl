@@ -134,6 +134,19 @@ Resources:
                   - s3:GetObject
                   - s3:DeleteObject
                 Resource: !Sub "arn:aws:s3:::$${Bucket}/$${KeyPrefix}/*"
+        - PolicyName: S3List
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource:
+                  - !Sub "arn:aws:s3:::$${Bucket}"
+                  - !Sub "arn:aws:s3:::$${Bucket}/"
+                  - !Sub "arn:aws:s3:::$${Bucket}/*"
+                Condition:
+                  StringEquals:
+                    s3:prefix: "$${KeyPrefix}"
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
