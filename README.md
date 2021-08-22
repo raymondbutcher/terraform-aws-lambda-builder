@@ -112,14 +112,16 @@ The `LAMBDA` build mode works as follows.
 
  Different runtimes have different tools installed. Here are some notes about what is available to use in `build.sh`.
 
-| Runtime    | Notes                |
-|------------|----------------------|
-| nodejs10.x | `npm install` works  |
-| nodejs12.x | `npm install` works  |
-| python2.7  | `pip` not included   |
-| python3.6  | `pip install` works  |
-| python3.7  | `pip install` works  |
-| python3.8  | waiting on [this](https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/80), try CodeBuild instead |
+| Runtime    | Notes               |
+|------------|---------------------|
+| nodejs10.x | `npm install` works |
+| nodejs12.x | `npm install` works |
+| nodejs14.x  | waiting on [this](https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/80), try CodeBuild instead |
+| python2.7  | `pip` not included  |
+| python3.6  | `pip install` works |
+| python3.7  | `pip install` works |
+| python3.8  | `pip install` works |
+| python3.9  | `pip install` works |
 
 Runtimes not listed above have not been tested.
 
