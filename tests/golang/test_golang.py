@@ -36,7 +36,8 @@ class TestGolang(test.SimpleTest):
         """
 
         response = lambda_client.invoke(
-            FunctionName=FUNCTION_NAME, Payload=json.dumps({"name": "Pytest"}),
+            FunctionName=FUNCTION_NAME,
+            Payload=json.dumps({"name": "Pytest"}),
         )
         payload = json.load(response["Payload"])
 

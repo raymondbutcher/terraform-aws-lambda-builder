@@ -1,7 +1,6 @@
 import json
 
 import boto3
-
 import cfnresponse
 
 codebuild_client = boto3.client("codebuild")

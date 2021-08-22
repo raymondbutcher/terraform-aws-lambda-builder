@@ -16,7 +16,7 @@ FUNCTION_NAMES = [
 ]
 
 
-class TestNumpy(test.SimpleTest):
+class TestPython(test.SimpleTest):
     def test_init_terraform(self):
         """
         Configure and initialize the backend.
@@ -38,9 +38,10 @@ class TestNumpy(test.SimpleTest):
     @pytest.mark.parametrize("function_name", FUNCTION_NAMES)
     def test_invoke_lambda_function(self, function_name):
         """
-        Invoke the Lambda function to ensure numpy works.
-        (numpy was installed by pip in the build script)
-
+        Invoke the Lambda function to ensure it works.
+        The function uses numpy which should have been
+        installed by build script.
+        
         """
 
         response = lambda_client.invoke(FunctionName=function_name)

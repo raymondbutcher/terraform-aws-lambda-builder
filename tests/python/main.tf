@@ -17,7 +17,7 @@ module "lambda_function_36" {
   source = "../../"
 
   build_mode           = "LAMBDA"
-  function_name        = "terraform-aws-lambda-builder-numpy-36"
+  function_name        = "terraform-aws-lambda-builder-python-36"
   handler              = "lambda.handler"
   role_cloudwatch_logs = true
   runtime              = "python3.6"
@@ -30,7 +30,7 @@ module "lambda_function_37" {
   source = "../../"
 
   build_mode           = "LAMBDA"
-  function_name        = "terraform-aws-lambda-builder-numpy-37"
+  function_name        = "terraform-aws-lambda-builder-python-37"
   handler              = "lambda.handler"
   role_cloudwatch_logs = true
   runtime              = "python3.7"
@@ -51,6 +51,7 @@ module "lambda_function_38" {
   source_dir           = "${path.module}/src"
   timeout              = 30
 }
+
 
 module "lambda_function_39" {
   source = "../../"
