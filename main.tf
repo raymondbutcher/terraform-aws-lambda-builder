@@ -96,6 +96,7 @@ locals {
     "python3.6"  = "python.py"
     "python3.7"  = "python.py"
     "python3.8"  = "python.py"
+    "python3.9"  = "python.py"
   }
   lambda_cloudformation_template_body = var.enabled && var.build_mode == "LAMBDA" ? templatefile("${path.module}/lambda_builders/cfn.yaml.tmpl", {
     lambda_builder_code        = file("${path.module}/lambda_builders/${local.lambda_builder_filenames[var.runtime]}")

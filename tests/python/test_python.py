@@ -12,6 +12,7 @@ FUNCTION_NAMES = [
     "terraform-aws-lambda-builder-python-36",
     "terraform-aws-lambda-builder-python-37",
     "terraform-aws-lambda-builder-python-38",
+    "terraform-aws-lambda-builder-python-39",
 ]
 
 
@@ -40,7 +41,7 @@ class TestPython(test.SimpleTest):
         Invoke the Lambda function to ensure it works.
         The function uses numpy which should have been
         installed by build script.
-
+        
         """
 
         response = lambda_client.invoke(FunctionName=function_name)

@@ -121,6 +121,7 @@ The `LAMBDA` build mode works as follows.
 | python3.6  | `pip install` works |
 | python3.7  | `pip install` works |
 | python3.8  | `pip install` works |
+| python3.9  | `pip install` works |
 
 Runtimes not listed above have not been tested.
 
