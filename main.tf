@@ -3,7 +3,7 @@
 ################################
 
 data "external" "validate" {
-  count = var.enabled ? 1 : 0
+  count = var.enabled && var.enable_input_validation ? 1 : 0
 
   program = ["python", "${path.module}/validate.py"]
   query = {

@@ -41,6 +41,12 @@ variable "create_role" {
   default     = null
 }
 
+variable "enable_input_validation" {
+  description = "Check validity of input variables."
+  type        = bool
+  default     = true
+}
+
 variable "empty_dirs" {
   description = "Include empty directories in the Lambda package."
   type        = bool
